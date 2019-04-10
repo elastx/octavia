@@ -71,13 +71,16 @@ class ListenersController(base.BaseController):
         return listener_types.ListenerRootResponse(listener=result)
 
     @wsme_pecan.wsexpose(listener_types.ListenersRootResponse, wtypes.text,
-                         [wtypes.text], ignore_extra_args=True)
-    def get_all(self, project_id=None, fields=None):
+                         [wtypes.text], [wtypes.text], ignore_extra_args=True)
+    def get_all(self, project_id=None, fields=None, loadbalancer_id=None):
         """Lists all listeners."""
         pcontext = pecan.request.context
         context = pcontext.get('octavia_context')
 
         query_filter = self._auth_get_all(context, project_id)
+
+        if loadbalancer_id is not None:
+            query_filter['load_balancer_id'] = loadbalancer_id
 
         db_listeners, links = self.repositories.listener.get_all(
             context.session, show_deleted=False,
