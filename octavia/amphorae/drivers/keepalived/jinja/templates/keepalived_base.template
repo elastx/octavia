@@ -13,6 +13,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #}
+
+global_defs {
+  vrrp_version 3
+}
+
 vrrp_script check_script {
   script {{ check_script_path }}
   interval {{ vrrp_check_interval }}
@@ -21,12 +26,14 @@ vrrp_script check_script {
 }
 
 vrrp_instance {{ vrrp_group_name }} {
-  state {{ amp_role }}
+  state BACKUP
   interface {{ amp_intf }}
   virtual_router_id {{ amp_vrrp_id }}
   priority {{ amp_priority }}
   nopreempt
   accept
+  strict_mode off
+  version 3
   garp_master_refresh {{ vrrp_garp_refresh }}
   garp_master_refresh_repeat {{ vrrp_garp_refresh_repeat }}
   advert_int {{ advert_int }}
