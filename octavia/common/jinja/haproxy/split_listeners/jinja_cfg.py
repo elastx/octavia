@@ -16,10 +16,14 @@ import os
 import re
 
 import jinja2
+from oslo_log import log as logging
 
 from octavia.common.config import cfg
 from octavia.common import constants
 from octavia.common import utils as octavia_utils
+from octavia.common import validate
+
+LOG = logging.getLogger(__name__)
 
 PROTOCOL_MAP = {
     constants.PROTOCOL_TCP: 'tcp',
@@ -399,6 +403,14 @@ class JinjaTemplater(object):
             'domain_name': monitor.domain_name,
         }
 
+    @staticmethod
+    def _sanitize_url(value, field_name, obj_id):
+        if value and validate.INVALID_URL_CHARS_RE.search(value):
+            LOG.warning("L7policy %s has invalid %s in DB, clearing",
+                        obj_id, field_name)
+            return None
+        return value
+
     def _transform_l7policy(self, l7policy, feature_compatibility,
                             pool_tls_certs=None):
         """Transforms an L7 policy into an object that will
@@ -408,8 +420,10 @@ class JinjaTemplater(object):
         ret_value = {
             'id': l7policy.id,
             'action': l7policy.action,
-            'redirect_url': l7policy.redirect_url,
-            'redirect_prefix': l7policy.redirect_prefix,
+            'redirect_url': self._sanitize_url(
+                l7policy.redirect_url, 'redirect_url', l7policy.id),
+            'redirect_prefix': self._sanitize_url(
+                l7policy.redirect_prefix, 'redirect_prefix', l7policy.id),
             'enabled': l7policy.enabled
         }
         if (l7policy.redirect_pool and
