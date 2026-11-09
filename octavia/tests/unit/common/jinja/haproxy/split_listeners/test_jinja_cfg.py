@@ -965,6 +965,23 @@ class TestHaproxyCfg(base.TestCase):
         ret = self.jinja_cfg._transform_l7policy(in_l7policy, {})
         self.assertEqual(sample_configs_split.RET_L7POLICY_8, ret)
 
+    def test_transform_l7policy_redirect_url_injection(self):
+        in_l7policy = sample_configs_split.sample_l7policy_tuple(
+            'sample_l7policy_id_2', sample_policy=2)
+        in_l7policy = in_l7policy._replace(
+            redirect_url='https://example.com/\ncheck')
+        ret = self.jinja_cfg._transform_l7policy(in_l7policy, {})
+        self.assertIsNone(ret['redirect_url'])
+
+    def test_transform_l7policy_redirect_prefix_injection(self):
+        in_l7policy = sample_configs_split.sample_l7policy_tuple(
+            'sample_l7policy_id_2', sample_policy=2)
+        in_l7policy = in_l7policy._replace(
+            redirect_prefix='https://example.com/\ncheck',
+            redirect_url=None)
+        ret = self.jinja_cfg._transform_l7policy(in_l7policy, {})
+        self.assertIsNone(ret['redirect_prefix'])
+
     def test_transform_l7policy_disabled_rule(self):
         in_l7policy = sample_configs_split.sample_l7policy_tuple(
             'sample_l7policy_id_6', sample_policy=6)
